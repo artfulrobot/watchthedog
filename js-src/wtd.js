@@ -5,12 +5,13 @@
     <div id="wtd">
       <p v-show="status==='loading'">Loading data...</p>
       <div v-show="status==='ok'" class="wtd__filters">
-        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="reload()" /></div>
-        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="reload()"/></div>
-        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="reload()" /></div>
-        <div><button @click="reload()">✔ Reload</button></div>
-        <div><button @click="reset()">Reset</button></div>
+        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>
+        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>
+        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>
+        <div class="button"><button @click="reset()">Reset</button></div>
+        <div class="button"><button @click="newQuery()">✔ Reload</button></div>
       </div>
+      <p v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></p>
       <table>
         <thead>
           <tr>
@@ -23,9 +24,9 @@
           <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >
             <td >
               <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>
-              <a href @click.prevent.stop="date_from=entry.timestamp;reload();">Since</a>
+              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a>
             </td>
-            <td>{{entry.severity}} {{entry.type}}</td>
+            <td :class="'wtd__type severity-' + entry.severity">{{entry.severity}} {{entry.type}}</td>
             <td><message :entry="entry" /></td>
           </tr>
         </tbody>
@@ -40,6 +41,9 @@
         search: '',
 
         entries: [],
+        max: 0,
+        newEntries: [],
+        background_load: false,
       };
     },
     methods: {
@@ -47,25 +51,51 @@
         this.date_from = '';
         this.date_to = '';
         this.search = '';
-        this.reload();
+        this.newQuery(true);
       },
       selectEntry(entry) {
         entry.selected = !entry.selected;
       },
-      reload() {
+      showNewEntries() {
+        this.entries = this.newEntries.concat(this.entries);
+        this.newEntries = [];
+      },
+      newQuery() {
         this.status = 'loading';
+        this.background_load = false;
+        this.reload(true);
+      },
+      reload(showNow) {
+
+        if (!showNow) {
+          this.background_load = true;
+        }
 
         $.ajax('/admin/reports/wtd/api', { data: {
           date_from: this.date_from,
           date_to: this.date_to,
           search: this.search,
+          max: showNow ? false : this.max
         }
         })
         .then(
           r => {
             console.log("SUCCESS", r);
-            this.entries = r;
+            if (showNow) {
+              this.entries = r.entries;
+              this.max = r.max;
+              this.newEntries = [];
+            }
+            else if (this.background_load) {
+              if (this.max < r.max) {
+                // Store new entries.
+                this.max = r.max;
+                this.newEntries = r.entries;
+              }
+            }
             this.status = 'ok';
+            var vm = this;
+            setTimeout(function() {vm.reload(false);}, 2000);
           },
           e => {
             if (e.response && e.response.data) {
@@ -77,7 +107,7 @@
       }
     },
     created() {
-      this.reload();
+      this.newQuery();
     },
     components: {
       message: {

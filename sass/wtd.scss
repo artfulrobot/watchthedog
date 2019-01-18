@@ -16,14 +16,16 @@
     color:black;
   }
   pre.wtd__full_message {
-    max-height: calc(100vh - 5rem);
+    max-height: calc(100vh - 10rem);
+    overflow: auto;
   }
   pre.wtd__variables {
     background: #333;
     padding: 0.5rem 1rem;
     border-radius: 2px;
     color: #f0ffee;
-    max-height: calc(100vh - 5rem);
+    max-height: calc(100vh - 10rem);
+    overflow: auto;
   }
   .wtd__filters {
     padding:0.5rem 1rem;
@@ -34,6 +36,10 @@
     display:flex;
     &>div {
       flex: 1 0 auto;
+      &.button {
+        flex: 0 0 auto;
+        padding:0 1rem;
+      }
     }
     label {
       display:inline-block;
@@ -42,5 +48,16 @@
     input {
       display:inline-block;
     }
+  }
+  .wtd__type {
+    &.severity-0 { background-color: hsl(0deg,  80%, 70%); }
+    &.severity-1 { background-color: hsl(10deg, 80%, 70%); }
+    &.severity-2 { background-color: hsl(20deg, 80%, 70%); }
+    &.severity-3 { background-color: hsl(30deg, 70%, 70%); }
+    &.severity-4 { background-color: hsl(40deg, 50%, 70%); }
+    &.severity-5 { background-color: hsl(50deg, 30%, 70%); }
+    &.severity-6 { background-color: hsl(60deg, 20%, 70%); }
+    &.severity-7 { background-color: hsl(70deg, 10%, 70%); }
+    &.severity-8 { background-color: hsl(80deg, 10%, 70%); }
   }
 }
