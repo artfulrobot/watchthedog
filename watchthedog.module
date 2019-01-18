@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * Implements hook_menu
+ */
+function watchthedog_menu() {
+  return [
+    'admin/reports/wtd' => [
+      'title' => 'Watch the dog',
+      'page callback' => 'watchthedog__page',
+      'access arguments' => ['access site reports'],
+    ],
+    'admin/reports/wtd/api' => [
+      'page callback' => 'watchthedog__page_api',
+      'access arguments' => ['access site reports'],
+    ],
+  ];
+}
+
+function watchthedog__page() {
+  drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js', ['type' => 'external']);
+  drupal_add_js(drupal_get_path('module', 'watchthedog') . '/js/wtd.js');
+  drupal_add_css(drupal_get_path('module', 'watchthedog') . '/css/wtd.css');
+  $page = ['#markup' => '<div id="wtd">Loading...</div>'];
+  return $page;
+}
+/**
+ */
+function watchthedog__page_api() {
+
+  $limit = 20;
+  $offset = 0;
+
+  $params = [];
+  $wheres = [];
+  if (isset($_GET['date_from']) && strtotime($_GET['date_from']) > 0) {
+    $wheres[] = 'timestamp > ' . strtotime($_GET['date_from']);
+  }
+  if (!empty($_GET['search'])) {
+    $wheres[] = 'message LIKE :search1 OR variables LIKE :search2';
+    $params[':search1'] = $params[':search2'] = '%' . $_GET['search'] . '%';
+  }
+
+
+  if ($wheres) {
+    $wheres = 'WHERE (' . implode(') AND (', $wheres) . ')';
+  }
+  else {
+    $wheres = '';
+  }
+
+  $sql = "SELECT * FROM watchdog $wheres ORDER BY wid DESC LIMIT $offset, $limit";
+
+  $entries = array_values(db_query($sql, $params)->fetchAllAssoc('wid'));
+  foreach ($entries as &$_) {
+    $_->timestamp = date('Y-m-d H:i:s', $_->timestamp);
+    $_->variables = unserialize($_->variables);
+    if (is_array($_->variables)) {
+      $_->message = strtr($_->message, $_->variables);
+    }
+    $_->selected = FALSE;
+  }
+  unset($_);
+
+  $json = json_encode($entries);
+  drupal_add_http_header('Content-Length', strlen($json));
+  drupal_add_http_header('Content-Type', 'application/json');
+  echo $json;
+  drupal_exit();
+}

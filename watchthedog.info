@@ -1,0 +1,7 @@
+name = Watch The Dog
+description = Watchdog browser
+version = 0.1
+core = 7.x
+php = 7.0
+
+files[] = watchthedog.module

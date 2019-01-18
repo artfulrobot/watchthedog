@@ -1,0 +1,46 @@
+#wtd {
+  td, th {
+    vertical-align: top;
+  }
+  tr:nth-child(odd) td { background-color:#f6f6f6; }
+  tr:nth-child(even) td { background-color:#eee; }
+  tr.selected:nth-child(odd) td { background-color:#c0e6e0; }
+  tr.selected:nth-child(even) td { background-color:#cbf0f0; }
+  td.wtd__timestamp {
+    white-space: pre-line;
+  }
+  span.wtd__date {
+    color:#777;
+  }
+  span.wtd__time {
+    color:black;
+  }
+  pre.wtd__full_message {
+    max-height: calc(100vh - 5rem);
+  }
+  pre.wtd__variables {
+    background: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    color: #f0ffee;
+    max-height: calc(100vh - 5rem);
+  }
+  .wtd__filters {
+    padding:0.5rem 1rem;
+    background: #f0f0f0;
+    border-radius:4px;
+    margin:0 0 1rem;
+
+    display:flex;
+    &>div {
+      flex: 1 0 auto;
+    }
+    label {
+      display:inline-block;
+      padding-right:0.5rem;
+    }
+    input {
+      display:inline-block;
+    }
+  }
+}
