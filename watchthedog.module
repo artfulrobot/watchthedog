@@ -15,7 +15,7 @@ function watchthedog_menu() {
       'access arguments' => ['access site reports'],
     ],
     'admin/reports/wtd/test' => [
-      'title' => 'Watch the dog',
+      'title' => 'Create test entries',
       'page callback' => 'watchthedog__page_test',
       'access arguments' => ['access site reports'],
     ],
@@ -30,11 +30,23 @@ function watchthedog__page() {
   return $page;
 }
 function watchthedog__page_test() {
-  watchdog('watchthedog', 'Test thing', [], WATCHDOG_WARNING);
-  $page = ['#markup' => 'Made a thing'];
+  foreach ([
+    'WATCHDOG_EMERGENCY',
+    'WATCHDOG_ALERT',
+    'WATCHDOG_CRITICAL',
+    'WATCHDOG_ERROR',
+    'WATCHDOG_WARNING',
+    'WATCHDOG_NOTICE',
+    'WATCHDOG_INFO',
+    'WATCHDOG_DEBUG',
+  ] as $i => $const) {
+    watchdog('watchthedog', 'Test @level @const', ['@level' => $i, '@const' => $const, 'unused_var'=>TRUE], $i);
+  }
+  $page = ['#markup' => 'Lots of entries created'];
   return $page;
 }
 /**
+ * Outputs watchdog entries as JSON
  */
 function watchthedog__page_api() {
 
@@ -69,15 +81,32 @@ function watchthedog__page_api() {
     $_->timestamp = date('Y-m-d H:i:s', $_->timestamp);
     $_->variables = unserialize($_->variables);
     if (is_array($_->variables)) {
-      $_->message = strtr($_->message, $_->variables);
+
+      // Drupal's t() replaces placeholders like @foo.
+
+      /*
+      $subs = [];
+      foreach ($_->variables as $var => $val) {
+        if (strpos($_->message, $var) !== FALSE) {
+          if (is_array($val) || is_object($val)) {
+            $val = json_encode($val);
+          }
+          $subs[$var] = $val;
+        }
+      }
+      $_->message = strtr($_->message, $subs);
+       */
+      $_->message = t($_->message, $_->variables);
     }
+    $_->variables = json_encode($_->variables, JSON_PRETTY_PRINT);
     $_->selected = FALSE;
+    $_ = (array) $_;
   }
   unset($_);
 
   $max = db_query('SELECT MAX(wid) `wid` FROM watchdog')->fetchAssoc();
-
-  $json = json_encode(['entries' => $entries, 'max' => (int) $max['wid']]);
+  $entries = ['entries' => $entries, 'max' => (int) $max['wid']];
+  $json = json_encode($entries);
   drupal_add_http_header('Content-Length', strlen($json));
   drupal_add_http_header('Content-Type', 'application/json');
   echo $json;

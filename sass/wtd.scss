@@ -15,9 +15,15 @@
   span.wtd__time {
     color:black;
   }
-  pre.wtd__full_message {
-    max-height: calc(100vh - 10rem);
-    overflow: auto;
+  .wtd__full_message {
+    overflow:hidden;
+    height:1.4rem;
+
+    &.full {
+      height:auto;
+      max-height: calc(100vh - 10rem);
+      overflow: auto;
+    }
   }
   pre.wtd__variables {
     background: #333;
@@ -34,6 +40,7 @@
     margin:0 0 1rem;
 
     display:flex;
+    flex-wrap:wrap;
     &>div {
       flex: 1 0 auto;
       &.button {
@@ -47,17 +54,19 @@
     }
     input {
       display:inline-block;
+      width:calc(100% - 5em);
     }
   }
   .wtd__type {
-    &.severity-0 { background-color: hsl(0deg,  80%, 70%); }
-    &.severity-1 { background-color: hsl(10deg, 80%, 70%); }
-    &.severity-2 { background-color: hsl(20deg, 80%, 70%); }
-    &.severity-3 { background-color: hsl(30deg, 70%, 70%); }
-    &.severity-4 { background-color: hsl(40deg, 50%, 70%); }
-    &.severity-5 { background-color: hsl(50deg, 30%, 70%); }
-    &.severity-6 { background-color: hsl(60deg, 20%, 70%); }
-    &.severity-7 { background-color: hsl(70deg, 10%, 70%); }
-    &.severity-8 { background-color: hsl(80deg, 10%, 70%); }
+    &.severity-0 { background-color: #b30000; color: white; &:before { content: 'Emergency'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-1 { background-color: #e6310b; &:before { content: 'Alert'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-2 { background-color: #e35537; &:before { content: 'Critical'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-3 { background-color: #e3815b; &:before { content: 'Error'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-4 { background-color: #ecc77f; &:before { content: 'Warning'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-5 { background-color: #e7dc9f; &:before { content: 'Notice'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-6 { background-color: #d1e6bc; &:before { content: 'Info'; font-size: (12em/16);text-align:centre; display:block;}}
+    &.severity-7 { background-color: #cdd7cf; &:before { content: 'Debug'; font-size: (12em/16);text-align:centre; display:block;}}
   }
+  #wtd__auto_show { display: inline-block; }
+  #wtd__auto_show+label { display: inline-block; padding-left:0.5rem; }
 }

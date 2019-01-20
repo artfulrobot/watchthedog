@@ -9,9 +9,9 @@
         <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>
         <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>
         <div class="button"><button @click="reset()">Reset</button></div>
-        <div class="button"><button @click="newQuery()">✔ Reload</button></div>
+        <!-- This should not be needed. <div class="button"><button @click="newQuery()">✔ Reload</button></div>-->
       </div>
-      <p v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></p>
+      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label> <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></span></p>
       <table>
         <thead>
           <tr>
@@ -26,7 +26,7 @@
               <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>
               <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a>
             </td>
-            <td :class="'wtd__type severity-' + entry.severity">{{entry.severity}} {{entry.type}}</td>
+            <td :class="'wtd__type severity-' + entry.severity">{{entry.type}}</td>
             <td><message :entry="entry" /></td>
           </tr>
         </tbody>
@@ -41,6 +41,7 @@
         search: '',
 
         entries: [],
+        auto_show_new_entries: false,
         max: 0,
         newEntries: [],
         background_load: false,
@@ -80,7 +81,6 @@
         })
         .then(
           r => {
-            console.log("SUCCESS", r);
             if (showNow) {
               this.entries = r.entries;
               this.max = r.max;
@@ -90,7 +90,11 @@
               if (this.max < r.max) {
                 // Store new entries.
                 this.max = r.max;
-                this.newEntries = r.entries;
+                // Add the new entries to the start of our newEntries list.
+                this.newEntries = r.entries.concat(this.newEntries);
+                if (this.auto_show_new_entries) {
+                  this.showNewEntries();
+                }
               }
             }
             this.status = 'ok';
@@ -113,10 +117,9 @@
       message: {
         template: `
           <div>
-            <div v-show="!showFull">{{shortMessage}}</div>
-            <button v-if="isLong" @click.stop="showFull = !showFull">{{  showFull ? 'Hide' : 'Show' }} full</button>
+            <div :class="{wtd__full_message: true, full: showFull}" v-html="this.entry.message"></div>
+            <button @click.stop="showFull = !showFull">{{  showFull ? 'Hide' : 'Show' }} full</button>
             <button @click.stop="showVars = !showVars">{{  showVars ? 'Hide' : 'Show' }} vars</button>
-            <pre v-if="showFull" class="wtd__full_message">{{this.entry.message}}</pre>
             <pre v-if="showVars" class="wtd__variables">{{this.entry.variables}}</pre>
           </div>
         `,

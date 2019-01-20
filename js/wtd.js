@@ -4,7 +4,7 @@
   return $(function () {
     var app = new Vue({
       el: '#wtd',
-      template: '\n    <div id="wtd">\n      <p v-show="status===\'loading\'">Loading data...</p>\n      <div v-show="status===\'ok\'" class="wtd__filters">\n        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>\n        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>\n        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>\n        <div class="button"><button @click="reset()">Reset</button></div>\n        <div class="button"><button @click="newQuery()">\u2714 Reload</button></div>\n      </div>\n      <p v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></p>\n      <table>\n        <thead>\n          <tr>\n            <th>When</th>\n            <th>Type</th>\n            <th>Details</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >\n            <td >\n              <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>\n              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a>\n            </td>\n            <td :class="\'wtd__type severity-\' + entry.severity">{{entry.severity}} {{entry.type}}</td>\n            <td><message :entry="entry" /></td>\n          </tr>\n        </tbody>\n      </table>\n    </div>\n    ',
+      template: '\n    <div id="wtd">\n      <p v-show="status===\'loading\'">Loading data...</p>\n      <div v-show="status===\'ok\'" class="wtd__filters">\n        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>\n        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>\n        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>\n        <div class="button"><button @click="reset()">Reset</button></div>\n        <!-- This should not be needed. <div class="button"><button @click="newQuery()">\u2714 Reload</button></div>-->\n      </div>\n      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label> <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></span></p>\n      <table>\n        <thead>\n          <tr>\n            <th>When</th>\n            <th>Type</th>\n            <th>Details</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >\n            <td >\n              <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>\n              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a>\n            </td>\n            <td :class="\'wtd__type severity-\' + entry.severity">{{entry.type}}</td>\n            <td><message :entry="entry" /></td>\n          </tr>\n        </tbody>\n      </table>\n    </div>\n    ',
       data: function data() {
         return {
           status: 'loading',
@@ -13,6 +13,7 @@
           search: '',
 
           entries: [],
+          auto_show_new_entries: false,
           max: 0,
           newEntries: [],
           background_load: false
@@ -52,7 +53,6 @@
               max: showNow ? false : this.max
             }
           }).then(function (r) {
-            console.log("SUCCESS", r);
             if (showNow) {
               _this.entries = r.entries;
               _this.max = r.max;
@@ -61,7 +61,11 @@
               if (_this.max < r.max) {
                 // Store new entries.
                 _this.max = r.max;
-                _this.newEntries = r.entries;
+                // Add the new entries to the start of our newEntries list.
+                _this.newEntries = r.entries.concat(_this.newEntries);
+                if (_this.auto_show_new_entries) {
+                  _this.showNewEntries();
+                }
               }
             }
             _this.status = 'ok';
@@ -83,7 +87,7 @@
 
       components: {
         message: {
-          template: '\n          <div>\n            <div v-show="!showFull">{{shortMessage}}</div>\n            <button v-if="isLong" @click.stop="showFull = !showFull">{{  showFull ? \'Hide\' : \'Show\' }} full</button>\n            <button @click.stop="showVars = !showVars">{{  showVars ? \'Hide\' : \'Show\' }} vars</button>\n            <pre v-if="showFull" class="wtd__full_message">{{this.entry.message}}</pre>\n            <pre v-if="showVars" class="wtd__variables">{{this.entry.variables}}</pre>\n          </div>\n        ',
+          template: '\n          <div>\n            <div :class="{wtd__full_message: true, full: showFull}" v-html="this.entry.message"></div>\n            <button @click.stop="showFull = !showFull">{{  showFull ? \'Hide\' : \'Show\' }} full</button>\n            <button @click.stop="showVars = !showVars">{{  showVars ? \'Hide\' : \'Show\' }} vars</button>\n            <pre v-if="showVars" class="wtd__variables">{{this.entry.variables}}</pre>\n          </div>\n        ',
           data: function data() {
             return {
               showFull: false,
