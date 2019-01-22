@@ -30,6 +30,22 @@ function watchthedog__page() {
   return $page;
 }
 function watchthedog__page_test() {
+
+  foreach([
+    ['something', "Some boring message that is very long goes here. But you only see the first line at first, because it makes it easier to scan. But you can click the Full button to see it all", [], WATCHDOG_NOTICE],
+    ['access denied', "node/add - don't you hate getting these!", [], WATCHDOG_WARNING],
+    ['something', "You can inspect the variables too.", [
+      'well' => 'Hello there',
+      'how do you like' => [
+        'my' => 'structured data?',
+      ]
+    ], WATCHDOG_INFO],
+  ] as $params) {
+    watchdog($params[0], $params[1], $params[2], $params[3]);
+    sleep(2);
+  }
+  sleep(5);
+
   foreach ([
     'WATCHDOG_EMERGENCY',
     'WATCHDOG_ALERT',
