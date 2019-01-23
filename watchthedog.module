@@ -74,6 +74,9 @@ function watchthedog__page_api() {
   if (isset($_GET['date_from']) && strtotime($_GET['date_from']) > 0) {
     $wheres[] = 'timestamp > ' . strtotime($_GET['date_from']);
   }
+  if (isset($_GET['date_to']) && strtotime($_GET['date_to']) > 0) {
+    $wheres[] = 'timestamp < ' . strtotime($_GET['date_to']);
+  }
   if (!empty($_GET['search'])) {
     $wheres[] = 'message LIKE :search1 OR variables LIKE :search2';
     $params[':search1'] = $params[':search2'] = '%' . $_GET['search'] . '%';

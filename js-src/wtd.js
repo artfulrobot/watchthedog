@@ -11,7 +11,8 @@
         <div class="button"><button @click="reset()">Reset</button></div>
         <!-- This should not be needed. <div class="button"><button @click="newQuery()">✔ Reload</button></div>-->
       </div>
-      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label> <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new data</a></span></p>
+      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label>
+      <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new entries ({{newEntries.length}})</a></span></p>
       <table>
         <thead>
           <tr>
@@ -24,7 +25,8 @@
           <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >
             <td >
               <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>
-              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a>
+              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a> |
+              <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a>
             </td>
             <td :class="'wtd__type severity-' + entry.severity">{{entry.type}}</td>
             <td><message :entry="entry" /></td>
