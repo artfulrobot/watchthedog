@@ -130,11 +130,13 @@
     text-align: centre;
     display: block; }
 
+#wtd #wtd__auto_load,
 #wtd #wtd__auto_show {
   display: inline-block; }
 
-#wtd #wtd__auto_show + label {
+#wtd #wtd__auto_show + label,
+#wtd #wtd__auto_load + label {
   display: inline-block;
-  padding-left: 0.5rem; }
+  padding: 0 2rem 0 0.5rem; }
 
 /*# sourceMappingURL=wtd.css.map */

@@ -4,7 +4,7 @@
   return $(function () {
     var app = new Vue({
       el: '#wtd',
-      template: '\n    <div id="wtd">\n      <p v-show="status===\'loading\'">Loading data...</p>\n      <div v-show="status===\'ok\'" class="wtd__filters">\n        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>\n        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>\n        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>\n        <div class="button"><button @click="reset()">Reset</button></div>\n        <!-- This should not be needed. <div class="button"><button @click="newQuery()">\u2714 Reload</button></div>-->\n      </div>\n      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label>\n      <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new entries ({{newEntries.length}})</a></span></p>\n      <table>\n        <thead>\n          <tr>\n            <th>When</th>\n            <th>Type</th>\n            <th>Details</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >\n            <td >\n              <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>\n              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a> |\n              <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a>\n            </td>\n            <td :class="\'wtd__type severity-\' + entry.severity">{{entry.type}}</td>\n            <td><message :entry="entry" /></td>\n          </tr>\n        </tbody>\n      </table>\n    </div>\n    ',
+      template: '\n    <div id="wtd">\n      <p v-show="status===\'loading\'">Loading data...</p>\n      <div v-show="status===\'ok\'" class="wtd__filters">\n        <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>\n        <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>\n        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>\n        <div class="button"><button @click="reset()">Reset</button></div>\n        <!-- This should not be needed. <div class="button"><button @click="newQuery()">\u2714 Reload</button></div>-->\n      </div>\n      <p>\n        <input type="checkbox"\n          v-model="auto_load_new_entries"\n          id="wtd__auto_load"\n          @change="reloadSoon"\n        /><label for="wtd__auto_load">Load new entries automatically.</label>\n        <input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show" /><label for="wtd__auto_show">Show new entries automatically.</label>\n        <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new entries ({{newEntries.length}})</a></span>\n      </p>\n      <table>\n        <thead>\n          <tr>\n            <th>When</th>\n            <th>Type</th>\n            <th>Details</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >\n            <td >\n              <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>\n              <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a> |\n              <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a>\n            </td>\n            <td :class="\'wtd__type severity-\' + entry.severity">{{entry.type}}</td>\n            <td><message :entry="entry" /></td>\n          </tr>\n        </tbody>\n      </table>\n    </div>\n    ',
       data: function data() {
         return {
           status: 'loading',
@@ -13,10 +13,12 @@
           search: '',
 
           entries: [],
+          auto_load_new_entries: true,
           auto_show_new_entries: false,
           max: 0,
           newEntries: [],
-          background_load: false
+          background_load: false,
+          timer: false
         };
       },
 
@@ -69,16 +71,31 @@
               }
             }
             _this.status = 'ok';
-            var vm = _this;
-            setTimeout(function () {
-              vm.reload(false);
-            }, 2000);
+            _this.timer = false;
+            _this.reloadSoon();
           }, function (e) {
             if (e.response && e.response.data) {
               console.log("Error data", e.response.data);
             }
             console.error("ERROR ", e);
           });
+        },
+        reloadSoon: function reloadSoon() {
+          console.log("reloadSoon", this.timer, this.auto_load_new_entries);
+          if (!this.timer && this.auto_load_new_entries) {
+            // There is no current timer, and we are supposed to be auto loading,
+            // so set up a timeout.
+            var vm = this;
+            this.timer = setTimeout(function () {
+              vm.reload(false);
+            }, 2000);
+          }
+          if (this.timer && !this.auto_load_new_entries) {
+            // There is an existing timer and we are not supposed to be auto loading,
+            // cancel it.
+            clearTimeout(this.timer);
+            this.timer = false;
+          }
         }
       },
       created: function created() {

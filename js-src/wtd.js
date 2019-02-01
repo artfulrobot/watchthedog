@@ -11,8 +11,15 @@
         <div class="button"><button @click="reset()">Reset</button></div>
         <!-- This should not be needed. <div class="button"><button @click="newQuery()">✔ Reload</button></div>-->
       </div>
-      <p><input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show"/><label for="wtd__auto_show">Show new entries automatically.</label>
-      <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new entries ({{newEntries.length}})</a></span></p>
+      <p>
+        <input type="checkbox"
+          v-model="auto_load_new_entries"
+          id="wtd__auto_load"
+          @change="reloadSoon"
+        /><label for="wtd__auto_load">Load new entries automatically.</label>
+        <input type="checkbox" v-model="auto_show_new_entries" id="wtd__auto_show" /><label for="wtd__auto_show">Show new entries automatically.</label>
+        <span v-show="newEntries.length > 0">New data since search. <a href @click.prevent="showNewEntries()">Show new entries ({{newEntries.length}})</a></span>
+      </p>
       <table>
         <thead>
           <tr>
@@ -43,10 +50,12 @@
         search: '',
 
         entries: [],
+        auto_load_new_entries: true,
         auto_show_new_entries: false,
         max: 0,
         newEntries: [],
         background_load: false,
+        timer: false,
       };
     },
     methods: {
@@ -100,8 +109,8 @@
               }
             }
             this.status = 'ok';
-            var vm = this;
-            setTimeout(function() {vm.reload(false);}, 2000);
+            this.timer = false;
+            this.reloadSoon();
           },
           e => {
             if (e.response && e.response.data) {
@@ -110,7 +119,22 @@
             console.error("ERROR ", e);
           }
         );
-      }
+      },
+      reloadSoon() {
+        console.log("reloadSoon", this.timer, this.auto_load_new_entries);
+        if (!this.timer && this.auto_load_new_entries) {
+          // There is no current timer, and we are supposed to be auto loading,
+          // so set up a timeout.
+          var vm = this;
+          this.timer = setTimeout(function() {vm.reload(false);}, 2000);
+        }
+        if (this.timer && !this.auto_load_new_entries) {
+          // There is an existing timer and we are not supposed to be auto loading,
+          // cancel it.
+          clearTimeout(this.timer);
+          this.timer = false;
+        }
+      },
     },
     created() {
       this.newQuery();
