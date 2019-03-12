@@ -29,15 +29,18 @@
           </tr>
         </thead>
         <tbody>
+
           <tr v-for="entry in entries" :key="entry.wid" @click="selectEntry(entry)" :class="{selected: entry.selected}" >
             <td >
               <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>
               <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a> |
-              <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a>
+              <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a> |
+              <a href @click.prevent.stop="setTimeAround(entry.timestamp)">Around</a> {{entry.wid}}
             </td>
             <td :class="'wtd__type severity-' + entry.severity">{{entry.type}}</td>
             <td><message :entry="entry" /></td>
           </tr>
+
         </tbody>
       </table>
     </div>
@@ -64,6 +67,12 @@
         this.date_to = '';
         this.search = '';
         this.newQuery(true);
+      },
+      setTimeAround(timestamp) {
+        var t = new Date(timestamp).getTime();
+        this.date_from = (new Date(t - 3 * 60 * 1000)).toISOString().replace(/^(\d+-\d\d-\d\d)T(\d\d:\d\d).*$/, '$1 $2');
+        this.date_to   = (new Date(t + 3 * 60 * 1000)).toISOString().replace(/^(\d+-\d\d-\d\d)T(\d\d:\d\d).*$/, '$1 $2');
+        newQuery(true);
       },
       selectEntry(entry) {
         entry.selected = !entry.selected;

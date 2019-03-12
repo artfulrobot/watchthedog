@@ -31,6 +31,12 @@ function watchthedog__page() {
 }
 function watchthedog__page_test() {
 
+  civicrm_initialize();
+  Civi::log()->warning("xx1 " . json_encode(['orignal' => 'array', 'nested' => [ 'a', 'b' ]]), ['orignal' => 'array', 'nested' => [ 'a', 'b' ]]);
+  $page = ['#markup' => 'Lots of entries created'];
+  return $page;
+
+
   foreach([
     ['something', "Some boring message that is very long goes here. But you only see the first line at first, because it makes it easier to scan. But you can click the Full button to see it all", [], WATCHDOG_NOTICE],
     ['access denied', "node/add - don't you hate getting these!", [], WATCHDOG_WARNING],
