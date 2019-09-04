@@ -76,17 +76,30 @@ function watchthedog__page_api() {
   $offset = 0;
 
   $params = [];
+  $errors = [];
   $wheres = [];
-  if (isset($_GET['date_from']) && strtotime($_GET['date_from']) > 0) {
-    $wheres[] = 'timestamp > ' . strtotime($_GET['date_from']);
-  }
-  if (isset($_GET['date_to']) && strtotime($_GET['date_to']) > 0) {
-    $wheres[] = 'timestamp < ' . strtotime($_GET['date_to']);
-  }
+
+  $getdate = function($item, $op) use (&$errors, &$wheres) {
+    if (!empty($_GET[$item])) {
+      $_ = strtotime($_GET[$item]);
+      if ($_ === FALSE) {
+        // Failed to convert date.
+        $errors[] = "Invalid $item ignored.";
+      }
+      else {
+        $wheres[] = "timestamp $op $_";
+      }
+    }
+  };
+
+  $getdate('date_from', '>');
+  $getdate('date_to', '<');
+
   if (!empty($_GET['search'])) {
     $wheres[] = 'message LIKE :search1 OR variables LIKE :search2';
     $params[':search1'] = $params[':search2'] = '%' . $_GET['search'] . '%';
   }
+
   if (!empty($_GET['max']) && ((int) $_GET['max'])>0) {
     $wheres[] = "wid > :max";
     $params[':max'] = (int) $_GET['max'];
@@ -97,6 +110,14 @@ function watchthedog__page_api() {
   }
   else {
     $wheres = '';
+  }
+
+  if (isset($_GET['limit'])) {
+    $limit = (int) $_GET['limit'];
+    if ($limit < 1) {
+      $limit = 20;
+      $errors[] = "Invalid limit, 20 used.";
+    }
   }
 
   $sql = "SELECT * FROM watchdog $wheres ORDER BY wid DESC LIMIT $offset, $limit";
@@ -130,7 +151,7 @@ function watchthedog__page_api() {
   unset($_);
 
   $max = db_query('SELECT MAX(wid) `wid` FROM watchdog')->fetchAssoc();
-  $entries = ['entries' => $entries, 'max' => (int) $max['wid']];
+  $entries = ['entries' => $entries, 'max' => (int) $max['wid'], 'errors' => $errors, 'sql' => $sql];
   $json = json_encode($entries);
   drupal_add_http_header('Content-Length', strlen($json));
   drupal_add_http_header('Content-Type', 'application/json');

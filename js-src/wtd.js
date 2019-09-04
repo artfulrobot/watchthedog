@@ -8,8 +8,21 @@
         <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>
         <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>
         <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>
+        <div><label for="wtd__limit">Limit</label>
+          <select v-model="limit" id="wtd__limit" @change.prevent="newQuery()">
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="200">200</option>
+            <option value="1000">1000</option>
+          </select>
+        </div>
         <div class="button"><button @click="reset()">Reset</button></div>
         <!-- This should not be needed. <div class="button"><button @click="newQuery()">✔ Reload</button></div>-->
+      </div>
+      <div v-show="errors">
+        <ul>
+          <li v-for="e in errors" >{{e}}</li>
+        </ul>
       </div>
       <p>
         <input type="checkbox"
@@ -35,7 +48,7 @@
               <div class="wtd__timestamp"><span class="wtd__date">{{ entry.timestamp.substr(0,10) }}</span> <span class="wtd__time">{{entry.timestamp.substr(11,8)}}</span></div>
               <a href @click.prevent.stop="date_from=entry.timestamp;newQuery(true);">Since</a> |
               <a href @click.prevent.stop="date_to=entry.timestamp;newQuery(true);">Until</a> |
-              <a href @click.prevent.stop="setTimeAround(entry.timestamp)">Around</a> {{entry.wid}}
+              <a href @click.prevent.stop="setTimeAround(entry.timestamp)">Around</a>
             </td>
             <td :class="'wtd__type severity-' + entry.severity">{{entry.type}}</td>
             <td><message :entry="entry" /></td>
@@ -51,6 +64,8 @@
         date_from: '',
         date_to: '',
         search: '',
+        limit: '20',
+        errors: [],
 
         entries: [],
         auto_load_new_entries: true,
@@ -65,6 +80,7 @@
       reset() {
         this.date_from = '';
         this.date_to = '';
+        this.limit = '20';
         this.search = '';
         this.newQuery(true);
       },
@@ -96,11 +112,14 @@
           date_from: this.date_from,
           date_to: this.date_to,
           search: this.search,
+          limit: this.limit,
           max: showNow ? false : this.max
         }
         })
         .then(
           r => {
+            console.log(r);
+            this.errors = r.errors;
             if (showNow) {
               this.entries = r.entries;
               this.max = r.max;
@@ -155,6 +174,7 @@
             <div :class="{wtd__full_message: true, full: showFull}" v-html="this.entry.message"></div>
             <button @click.stop="showFull = !showFull">{{  showFull ? 'Hide' : 'Show' }} full</button>
             <button @click.stop="showVars = !showVars">{{  showVars ? 'Hide' : 'Show' }} vars</button>
+            <a :href="'/admin/reports/event/' + entry.wid" target="_blank" >Watchdog</a>
             <pre v-if="showVars" class="wtd__variables">{{this.entry.variables}}</pre>
           </div>
         `,
