@@ -100,6 +100,19 @@ function watchthedog__page_api() {
     $params[':search1'] = $params[':search2'] = '%' . $_GET['search'] . '%';
   }
 
+  if (!empty($_GET['type_search'])) {
+    // Check it's SQL safe; allow | though for regex
+    // Note `field = "bar"` in Drupal's SQL somehow get treated like `field =
+    // bar`. Have to use single quotes for string literals.
+    if (preg_match('/^[a-zA-Z_]+$/', $_GET['type_search'])) {
+      $wheres[] = 'type = :type';
+      $params[':type'] = $_GET['type_search'];
+    }
+    elseif (preg_match('/^[a-zA-Z_|]+$/', $_GET['type_search'])) {
+      $wheres[] = 'type REGEXP \'' . $_GET['type_search'] . '\'';
+    }
+  }
+
   if (!empty($_GET['max']) && ((int) $_GET['max'])>0) {
     $wheres[] = "wid > :max";
     $params[':max'] = (int) $_GET['max'];

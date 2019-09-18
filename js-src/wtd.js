@@ -7,7 +7,8 @@
       <div v-show="status==='ok'" class="wtd__filters">
         <div><label for="wtd__date_from">From</label><input id="wtd__date_from" v-model="date_from" @keyup.enter="newQuery()" /></div>
         <div><label for="wtd__date_to">to</label><input id="wtd__date_to" v-model="date_to"  @keyup.enter="newQuery()"/></div>
-        <div><label for="wtd__search">Search</label><input id="wtd__date_to" v-model="search" @keyup.enter="newQuery()" /></div>
+        <div><label for="wtd__type">Type</label><input id="wtd__type" v-model="type_search" @keyup.enter="newQuery()" /></div>
+        <div><label for="wtd__search">Search</label><input id="wtd__search" v-model="search" @keyup.enter="newQuery()" /></div>
         <div><label for="wtd__limit">Limit</label>
           <select v-model="limit" id="wtd__limit" @change.prevent="newQuery()">
             <option value="20">20</option>
@@ -64,6 +65,7 @@
         date_from: '',
         date_to: '',
         search: '',
+        type_search: '',
         limit: '20',
         errors: [],
 
@@ -82,6 +84,7 @@
         this.date_to = '';
         this.limit = '20';
         this.search = '';
+        this.type_search = '';
         this.newQuery(true);
       },
       setTimeAround(timestamp) {
@@ -112,6 +115,7 @@
           date_from: this.date_from,
           date_to: this.date_to,
           search: this.search,
+          type_search: this.type_search,
           limit: this.limit,
           max: showNow ? false : this.max
         }
