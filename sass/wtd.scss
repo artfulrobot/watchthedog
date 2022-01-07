@@ -17,6 +17,7 @@
   }
   .wtd__full_message {
     overflow:hidden;
+    max-width: 70vw;
     height:1.4rem;
     font-family: monospace;
     white-space: pre-wrap;
@@ -52,6 +53,25 @@
       &.button {
         flex: 0 0 auto;
         padding:0 1rem;
+      }
+    }
+    button {
+      background-color: #f3f4f6;
+      border: none;
+      padding: 0.25em 1em;
+      border-radius: 4px;
+      &:hover {
+        outline: solid 2px #0284ea;
+      }
+      &:active {
+        outline: solid 2px #02477d;
+      }
+    }
+    button.update {
+      background-color: #0284ea;
+      color: white;
+      &:disabled {
+        opacity: 0.4;
       }
     }
     label {

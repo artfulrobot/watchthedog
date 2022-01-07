@@ -23,7 +23,6 @@ function watchthedog_menu() {
 }
 
 function watchthedog__page() {
-  drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js', ['type' => 'external']);
   drupal_add_js(drupal_get_path('module', 'watchthedog') . '/js/wtd.js');
   drupal_add_css(drupal_get_path('module', 'watchthedog') . '/css/wtd.css');
   $page = ['#markup' => '<div id="wtd">Loading...</div>'];
